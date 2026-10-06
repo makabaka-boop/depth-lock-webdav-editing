@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>受限 WebDAV 文本工作区</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+         margin: 0; background: #f5f6f8; color: #1f2430; }
+  header { background: #23304f; color: #fff; padding: 12px 20px; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  main { max-width: 920px; margin: 18px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #dfe3ea; border-radius: 8px;
+          padding: 14px 16px; margin-bottom: 14px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=text] { flex: 1 1 320px; padding: 7px 10px; font-size: 14px;
+                     border: 1px solid #c4cad6; border-radius: 6px; }
+  textarea { width: 100%; min-height: 320px; box-sizing: border-box;
+             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+             font-size: 13.5px; padding: 10px; border: 1px solid #c4cad6;
+             border-radius: 6px; resize: vertical; }
+  button { padding: 7px 14px; font-size: 13.5px; border-radius: 6px;
+           border: 1px solid #23304f; background: #2f4373; color: #fff;
+           cursor: pointer; }
+  button.secondary { background: #fff; color: #2f4373; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .meta { font-size: 12.5px; color: #5a6478; margin-top: 8px;
+          font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .meta input { border: none; background: transparent; font: inherit;
+                color: inherit; width: 100%; }
+  #banner { margin-bottom: 12px; padding: 10px 12px; border-radius: 6px;
+            display: none; font-size: 13.5px; white-space: pre-wrap; }
+  #banner.info { display: block; background: #eaf2ff; border: 1px solid #b9d0f5; }
+  #banner.warn { display: block; background: #fff4e0; border: 1px solid #f0c674; }
+  #banner.error { display: block; background: #fdecea; border: 1px solid #e8a59e; }
+  #banner.conflict { display: block; background: #f3e8ff;
+                     border: 1px solid #b78af0; }
+  .hint { color: #78808f; font-size: 12px; margin-top: 6px; }
+  .lockbar { display: none; align-items: center; gap: 10px; margin-top: 8px;
+             font-size: 12.5px; color: #2f4373; }
+  .lockbar.active { display: flex; }
+  .pill { background: #e8eefc; border-radius: 999px; padding: 2px 10px; }
+  #saveAsHint { font-size: 12px; color: #78808f; }
+</style>
+</head>
+<body>
+<header><h1>受限 WebDAV 文本工作区 · 独占锁编辑器</h1></header>
+<main>
+  <div id="banner"></div>
+
+  <div class="card">
+    <div class="row">
+      <input id="path" type="text" value="/docs/intro.txt"
+             spellcheck="false" placeholder="已有资源路径，如 /docs/intro.txt">
+      <button id="btnLoad" class="secondary">取得文件与 ETag</button>
+    </div>
+    <div class="hint">仅能打开建库时已存在的文本资源；集合（目录）只用于锁定。</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button id="btnLock">锁定（LOCK Depth:0）</button>
+      <button id="btnRefresh" class="secondary" disabled>刷新锁</button>
+      <button id="btnUnlock" class="secondary" disabled>解锁（UNLOCK）</button>
+      <button id="btnSave" disabled>保存（PUT + If-Match）</button>
+      <span class="lockbar" id="lockBar">
+        <span class="pill" id="lockState">未锁定</span>
+        <span id="countdown"></span>
+      </span>
+    </div>
+    <div class="meta" id="etagLine">ETag：<input id="etag" readonly value=""></div>
+    <div class="meta" id="tokenLine" hidden>锁令牌：<input id="token" readonly></div>
+    <div class="hint">
+      保存时携带 <code>If-Match</code>（取得文件时的强 ETag）与
+      <code>If: (&lt;锁令牌&gt; [&quot;ETag&quot;])</code>。
+      冲突时本地草稿会保留在编辑器中，权威版本会载入下方对照。
+    </div>
+  </div>
+
+  <div class="card">
+    <textarea id="draft" placeholder="取得文件后在此编辑……"></textarea>
+    <div id="saveAsHint"></div>
+  </div>
+
+  <div class="card" id="authorityCard" hidden>
+    <strong style="font-size:13.5px">服务器上的权威版本（冲突时显示）：</strong>
+    <div class="meta" id="authorityEtag"></div>
+    <textarea id="authority" readonly style="margin-top:8px;min-height:180px;
+      background:#f7f7f9"></textarea>
+  </div>
+</main>
+<script src="/__editor__/app.js"></script>
+</body>
+</html>
